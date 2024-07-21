@@ -16,7 +16,7 @@
 
 #define DEVICES_PATH "/sys/devices/pci0000:00"
 
-namespace VCOMCOMM {
+namespace VCOM {
 
 #define BUFFER_SIZE 64
 
@@ -65,13 +65,13 @@ struct device_data {
 };
 std::ostream& operator<<(std::ostream& cout, device_data &data);
 
-class VCOMCOMM {
+class VCOM {
 private:
     device_data listDevicesInformation(std::string path); // 读取当前路径下的设备信息，并存储
     char m_buffer[BUFFER_SIZE]; // 接收缓冲区
     int setUartConfig() const; // 配置串口
 public:
-    ~VCOMCOMM() {
+    ~VCOM() {
         close(m_uart_data.fd);
     }
     int openPort(const char* dev = "", int baud_rate = 115200, int data_bits = 8,

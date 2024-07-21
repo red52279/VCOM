@@ -1,6 +1,6 @@
 #include "VCOM.h"
 
-namespace VCOMCOMM {
+namespace VCOM {
 
 std::ostream& operator<<(std::ostream& cout, device_data &data) {
     for (int i = 0; i < 6; i++)
@@ -9,7 +9,7 @@ std::ostream& operator<<(std::ostream& cout, device_data &data) {
     return cout;
 }
 
-device_data VCOMCOMM::listDevicesInformation(std::string path) { // 读取并返回设备信息
+device_data VCOM::listDevicesInformation(std::string path) { // 读取并返回设备信息
     device_data data;
     if (path[path.size() - 1] != '/')
         path += '/';
@@ -28,7 +28,7 @@ device_data VCOMCOMM::listDevicesInformation(std::string path) { // 读取并返
     return data;
 }
 
-int VCOMCOMM::findConnectableDeviceDir(const std::string base_path, device_data data) { // 递归读取设备信息 寻找ttyACMn
+int VCOM::findConnectableDeviceDir(const std::string base_path, device_data data) { // 递归读取设备信息 寻找ttyACMn
     if (base_path == DEVICES_PATH) {
         std::cout << "正在搜索可用设备..." << std::endl;
         m_connectable_port_devices.clear();
@@ -97,7 +97,7 @@ int VCOMCOMM::findConnectableDeviceDir(const std::string base_path, device_data 
     } else return setUartConfig();
 }
 
-int VCOMCOMM::setUartConfig() const {
+int VCOM::setUartConfig() const {
     struct termios opt{};
     int speed;
     if (tcgetattr(m_uart_data.fd, &opt) != 0) {
@@ -182,7 +182,7 @@ int VCOMCOMM::setUartConfig() const {
     return 1;
 }
 
-int VCOMCOMM::openPort(const char* dev, int baud_rate, int data_bits, char parity, int stop_bits) {
+int VCOM::openPort(const char* dev, int baud_rate, int data_bits, char parity, int stop_bits) {
     if (*dev == *"") {
         if (m_device_data.port.empty()) {
             std::cout << "未配置串口信息" << std::endl;
@@ -224,7 +224,7 @@ int VCOMCOMM::openPort(const char* dev, int baud_rate, int data_bits, char parit
 
 
 
-void VCOMCOMM::transmit(std::vector<uint8_t> &data, uint8_t func_code, uint16_t id) {
+void VCOM::transmit(std::vector<uint8_t> &data, uint8_t func_code, uint16_t id) {
     uint16_t len = data.size();
     uint8_t buff[BUFFER_SIZE];
     memset(buff, '\0', sizeof(buff));
@@ -250,7 +250,7 @@ void VCOMCOMM::transmit(std::vector<uint8_t> &data, uint8_t func_code, uint16_t 
     std::cout.unsetf(std::ios::hex);
 }
 
-int VCOMCOMM::portRead() {
+int VCOM::portRead() {
     int bytesRead = read(m_uart_data.fd, m_buffer, sizeof(m_buffer));
     if (bytesRead < 0) {
         std::cerr << "Error reading serial port." << std::endl;

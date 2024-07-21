@@ -10,7 +10,7 @@ struct data {
 
 data temp = {114, 5.14};
 
-void readThread(VCOMCOMM::VCOMCOMM &COM) {
+void readThread(VCOM::VCOM &COM) {
     while (COM.portRead() > 0) {
         if (COM.m_data.id == 1 && COM.m_data.func_code == 0) {
             data test;
@@ -27,7 +27,7 @@ void readThread(VCOMCOMM::VCOMCOMM &COM) {
 
 int main()
 {
-    VCOMCOMM::VCOMCOMM COM;
+    VCOM::VCOM COM;
     if (COM.findConnectableDeviceDir() < 0) return -1;
 
     int count = 0;
