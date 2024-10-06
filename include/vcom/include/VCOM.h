@@ -104,7 +104,7 @@ public:
     }
 
     /**
-     * @brief 读取已经解包的数据队列
+     * @brief 读取已经解包的数据队列,获取所有数据
      *
      * @tparam T 功能码和识别码对应的要读取的数据类型
      * @param package_data 接收数据的动态数组
@@ -112,10 +112,10 @@ public:
      * @param id 识别码
      */
     template <class T>
-    void getData(std::vector<T> &package_data, uint8_t fun_code, uint16_t id) {
+    int getData(std::vector<T> &package_data, uint8_t fun_code, uint16_t id) {
         if (sizeof(T) > BUFFER_SIZE - 16) {
             std::cout << "自定义数据包过大,当前" << sizeof(T) << "字节（最大48字节）" << std::endl;
-            return;
+            return false;
         }
         std::unique_lock<std::mutex> lock(data_queue_mutex_);
         std::vector<VCOMData> to_remove;
@@ -127,6 +127,33 @@ public:
         }
         for (const VCOMData &data : to_remove) {
             data_queue_.erase(std::remove(data_queue_.begin(), data_queue_.end(), data), data_queue_.end());
+        }
+        return static_cast<int>(to_remove.size());
+    }
+
+    /**
+     * @brief 读取已经解包的数据队列,获取单个数据
+     *
+     * @tparam T 功能码和识别码对应的要读取的数据类型
+     * @param package_data 接收数据的指针
+     * @param fun_code 功能码
+     * @param id 识别码
+     */
+    template <class T>
+    bool getData(T *package_data_ptr, uint8_t fun_code, uint16_t id) {
+        if (sizeof(T) > BUFFER_SIZE - 16) {
+            std::cout << "自定义数据包过大,当前" << sizeof(T) << "字节（最大48字节）" << std::endl;
+            return false;
+        }
+        std::unique_lock<std::mutex> lock(data_queue_mutex_);
+        for (VCOMData &qdata: data_queue_) {
+            if (qdata.func_code == fun_code && qdata.id == id) {
+                if (package_data_ptr != nullptr) {
+                    *package_data_ptr = *((T*)(qdata.data.data()));
+                }
+                data_queue_.erase(std::remove(data_queue_.begin(), data_queue_.end(), qdata), data_queue_.end());
+                return true;
+            }
         }
     }
 
