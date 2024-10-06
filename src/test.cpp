@@ -1,50 +1,39 @@
 #include "VCOM.h"
-#include <thread>
 
-#define TESTLEN 10
-struct data {
-    int a;
-    float b;
-    int nums[TESTLEN];
+struct test_data{
+    int a[12];
 };
 
-data temp = {114, 5.14};
+int count = 0;
 
-void readThread(VCOM::VCOM &COM) {
-    while (COM.portRead() > 0) {
-        if (COM.m_data.id == 1 && COM.m_data.func_code == 0) {
-            data test;
-            COM.getData<data>(test);
-            std::cout << test.a << " " << test.b << std::endl;
-            for (int i = 0; i < TESTLEN; i++) {
-                std::cout << test.nums[i] << " ";
-            }
-            std::cout << std::endl;
-        }
-    }
+void callBackFunc(void* data) {
+    test_data m = *(test_data*)data;
+    ++count;
 }
-
 
 int main()
 {
-    VCOM::VCOM COM;
-    if (COM.findConnectableDeviceDir() < 0) return -1;
+    VCOM::VCOM com;
 
-    int count = 0;
+    VCOM::VCOM::CallbackType a;
 
-    std::thread read_thread(readThread, std::ref(COM));
+    if (com.findConnectableDevice() < 0) return -1;
 
-    while (count < 3) {
-        for (int i = count++; i < TESTLEN + count; i++) {
-            temp.nums[i] = i;
-        }
-        COM.transmit<data>(temp);
-        sleep(2);
-    }
+    com.terminal_monitor_ = false;
 
-    if (read_thread.joinable()) {
-        read_thread.join();
-    }
+    com.callBackFuncRegister(callBackFunc, 1, 0);
+
+    com.start(30); // 设置发送最大频率
+
+    for (int i = 0; i < 50; i++)
+        com.transmit<test_data>({i}, 1, 0);
+
+    sleep(5); // 在收发数据时 请保证 VCOM 对象的存在
+
+    std::vector<test_data> datas;
+    com.getData(datas, 1, 0);
+    std::cout << "共调用了 " << count << " 次回调函数" << std::endl; // 如果注册了回调函数将收不到回调函数处理过的数据
+    std::cout << "共接收了 " << datas.size() << " 次串口数据" << std::endl;
+
     return 0;
 }
-

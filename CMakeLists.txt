@@ -7,4 +7,18 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-add_executable(${PROJECT_NAME} src/test.cpp src/VCOM.cpp src/CRC.cpp)
+include_directories(
+	include/vcom/include
+)
+
+add_subdirectory(include/vcom)
+
+add_executable(${PROJECT_NAME} src/test.cpp)
+
+target_link_directories(${PROJECT_NAME} PRIVATE
+	include/vcom/include
+)
+
+target_link_libraries(${PROJECT_NAME} PUBLIC
+	vcom
+)
