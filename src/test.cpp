@@ -19,21 +19,37 @@ int main()
 
     if (com.findConnectableDevice() < 0) return -1;
 
-    com.terminal_monitor_ = false;
+    com.terminal_monitor_ = true;
 
     com.callBackFuncRegister(callBackFunc, 1, 0);
 
-    com.start(30); // 设置发送最大频率
+    com.setDataBufferSize(1, 1, 35);
 
-    for (int i = 0; i < 50; i++)
+    com.setTransmitPriority(1, 1, -1);
+
+    com.start(1); // 设置发送最大频率
+
+    std::vector<test_data> data00, data11, data01;
+
+
+    for (int i = 0; i < 5; i++) {
+        com.transmit<test_data>({i}, 1, 1);
         com.transmit<test_data>({i}, 1, 0);
+        com.transmit<test_data>({i}, 0, 0);
+        com.transmit<test_data>({i}, 0, 1);
+    }
 
-    sleep(5); // 在收发数据时 请保证 VCOM 对象的存在
+    std::cout << "开始等待 0 1 新数据" << std::endl;
+    while (!com.getNewData<void*>(nullptr, 0, 1, 2, true));
+    std::cout << "收到 0 1 新数据" << std::endl;
 
-    std::vector<test_data> datas;
-    com.getData(datas, 1, 0);
-    std::cout << "共调用了 " << count << " 次回调函数" << std::endl; // 如果注册了回调函数将收不到回调函数处理过的数据
-    std::cout << "共接收了 " << datas.size() << " 次串口数据" << std::endl;
+    sleep(10); // 在收发数据时 请保证 VCOM 对象的存在
+
+    com.getData(data00, 0, 0);
+    com.getData(data11, 1, 1, true);
+    std::cout << "1 0共调用了 " << count << " 次回调函数" << std::endl; // 如果注册了回调函数将收不到回调函数处理过的数据
+    std::cout << "0 0共接收了 " << data00.size() << " 次串口数据" << std::endl;
+    std::cout << "1 1共接收了 " << data11.size() << " 次串口数据" << std::endl;
 
     return 0;
 }
